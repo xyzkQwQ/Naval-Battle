@@ -1,11 +1,12 @@
+
 import java.util.Random;
 import java.util.Scanner;
 
 public class NavalBattle {
 
     static String[][] grille = new String[10][10];
-    static String[] shipNames = { "A", "C", "D", "S", "T" }; // initiales des bateaux
-    static int[] shipSizes = { 5, 4, 3, 3, 2 }; // tailles restantes
+    static String[] shipNames = {"A", "C", "D", "S", "T"}; // initiales des bateaux
+    static int[] shipSizes = {5, 4, 3, 3, 2}; // tailles restantes
     public static final String RED = "\u001B[31m";
     public static final String BLUE = "\u001B[96m";
     public static final String GREEN = "\u001B[32m";
@@ -13,8 +14,8 @@ public class NavalBattle {
     public static final String RESET = "\u001B[0m";
 
     public static void main(String[] args) {
-        String[] shipName = { "ac", "cruiser", "destroyer", "submarine", "torpedoBoat" };
-        int[] shipSize = { 5, 4, 3, 3, 2 };
+        String[] shipName = {"ac", "cruiser", "destroyer", "submarine", "torpedoBoat"};
+        int[] shipSize = {5, 4, 3, 3, 2};
 
         // Initialisation et placement des bateaux
         initGrille();
@@ -36,13 +37,16 @@ public class NavalBattle {
                 String input = xy.nextLine().toUpperCase();
 
                 // Tir et mise à jour du compteur
-                boolean validShot = shoot(input);
-                if (validShot) {
-                    remainingShipCells--;
-                    shots++;
-                } else {
+                int result = shoot(input); // 0 = invalide, 1 = manqué, 2 = touché
+
+                if (result == 0) {
                     System.out.println("Try again, input invalid or cell already shot.");
-                }
+                } else {
+                    shots++; // On consomme un tir pour manqué ou touché
+                    if (result == 2) {
+                        remainingShipCells--; // Seulement si touché, on réduit les cellules restantes
+
+                                    }}
 
                 // Affiche la grille après chaque tir
                 displayGrille();
@@ -70,10 +74,10 @@ public class NavalBattle {
     // Affichage de la grille
     public static void displayGrille() {
         String[] legend = {
-                BLUE + "- " + RESET + ": Case non tirée",
-                GREEN + "O " + RESET + ": Tir manqué",
-                RED + "X " + RESET + ": Touché",
-                PURPLE + "# " + RESET + ": Navire coulé"
+            BLUE + "- " + RESET + ": Case non tirée",
+            GREEN + "O " + RESET + ": Tir manqué",
+            RED + "X " + RESET + ": Touché",
+            PURPLE + "# " + RESET + ": Navire coulé"
         };
         // Affichage des colonnes
         System.out.print("   ");
@@ -90,19 +94,12 @@ public class NavalBattle {
                 String cell = grille[i][j];
                 String color;
 
-                switch (cell) {
-                    case "O":
-                        color = GREEN;
-                        break;
-                    case "X":
-                        color = RED;
-                        break;
-                    case "#":
-                        color = PURPLE;
-                        break;
-                    default:
-                        color = BLUE;
-                }
+                color = switch (cell) {
+                    case "O" -> GREEN;
+                    case "X" -> RED;
+                    case "#" -> PURPLE;
+                    default -> BLUE;
+                };
 
                 // Bateau non touché = eau "-"
                 if (cell.equals("A") || cell.equals("C") || cell.equals("D") || cell.equals("S") || cell.equals("T")) {
@@ -139,79 +136,74 @@ public class NavalBattle {
             int tempLine = line;
             int tempColumn = column;
 
-            if (direction == 0) { // cas du haut
-
-                // tant que y'a de la place et qu'on est pas sorti
-                while (tempLine >= 0 && shipSpaceCount < shipSize) {
-                    if (grille[tempLine][column].equals("-")) {
-                        // si c'est de la mer, y'a de la place, c'est okay pour le bateau
-                        shipSpaceCount++;
-                        tempLine--; // on remonte d'un cran
-                    } else { // PANIC, y'a pas la place
-                        break;
+            switch (direction) {
+                case 0 -> {// cas du haut
+                    
+                    // tant que y'a de la place et qu'on est pas sorti
+                    while (tempLine >= 0 && shipSpaceCount < shipSize) {
+                        if (grille[tempLine][column].equals("-")) {
+                            // si c'est de la mer, y'a de la place, c'est okay pour le bateau
+                            shipSpaceCount++;
+                            tempLine--; // on remonte d'un cran
+                        } else { // PANIC, y'a pas la place
+                            break;
+                        }
+                    }   if (shipSpaceCount == shipSize) { // y'a assez de place pour le bateau, on le pose
+                        for (int k = 0; k < shipSize; k++) {
+                            grille[line - k][column] = shipName.substring(0, 1).toUpperCase();
+                        }
+                        isSet = true;
                     }
                 }
-
-                if (shipSpaceCount == shipSize) { // y'a assez de place pour le bateau, on le pose
-                    for (int k = 0; k < shipSize; k++) {
-                        grille[line - k][column] = shipName.substring(0, 1).toUpperCase();
-                    }
-                    isSet = true;
-                }
-            } else if (direction == 1) { // on part à droite
-
-                while (tempColumn < 10 && shipSpaceCount < shipSize) {
-                    if (grille[line][tempColumn].equals("-")) {
-                        shipSpaceCount++;
-                        tempColumn++;
-                    } else {
-                        break;
-                    }
-                }
-
-                if (shipSpaceCount == shipSize) {
-                    for (int k = 0; k < shipSize; k++) {
-                        grille[line][column + k] = shipName.substring(0, 1).toUpperCase();
-                    }
-                    isSet = true;
-                }
-            }
-
-            else if (direction == 2) { // on part en bas
-
-                while (tempLine < 10 && shipSpaceCount < shipSize) {
-                    if (grille[tempLine][column].equals("-")) {
-                        shipSpaceCount++;
-                        tempLine++;
-                    } else {
-                        break;
+                case 1 -> {// on part à droite
+                    
+                    while (tempColumn < 10 && shipSpaceCount < shipSize) {
+                        if (grille[line][tempColumn].equals("-")) {
+                            shipSpaceCount++;
+                            tempColumn++;
+                        } else {
+                            break;
+                        }
+                    }   if (shipSpaceCount == shipSize) {
+                        for (int k = 0; k < shipSize; k++) {
+                            grille[line][column + k] = shipName.substring(0, 1).toUpperCase();
+                        }
+                        isSet = true;
                     }
                 }
-
-                if (shipSpaceCount == shipSize) {
-                    for (int k = 0; k < shipSize; k++) {
-                        grille[line + k][column] = shipName.substring(0, 1).toUpperCase();
-                    }
-                    isSet = true;
-                }
-            }
-
-            else if (direction == 3) { // on part à gauche
-
-                while (tempColumn >= 0 && shipSpaceCount < shipSize) {
-                    if (grille[line][tempColumn].equals("-")) {
-                        shipSpaceCount++;
-                        tempColumn--;
-                    } else {
-                        break;
+                case 2 -> {// on part en bas
+                    
+                    while (tempLine < 10 && shipSpaceCount < shipSize) {
+                        if (grille[tempLine][column].equals("-")) {
+                            shipSpaceCount++;
+                            tempLine++;
+                        } else {
+                            break;
+                        }
+                    }   if (shipSpaceCount == shipSize) {
+                        for (int k = 0; k < shipSize; k++) {
+                            grille[line + k][column] = shipName.substring(0, 1).toUpperCase();
+                        }
+                        isSet = true;
                     }
                 }
-
-                if (shipSpaceCount == shipSize) {
-                    for (int k = 0; k < shipSize; k++) {
-                        grille[line][column - k] = shipName.substring(0, 1).toUpperCase();
+                case 3 -> {// on part à gauche
+                    
+                    while (tempColumn >= 0 && shipSpaceCount < shipSize) {
+                        if (grille[line][tempColumn].equals("-")) {
+                            shipSpaceCount++;
+                            tempColumn--;
+                        } else {
+                            break;
+                        }
+                    }   if (shipSpaceCount == shipSize) {
+                        for (int k = 0; k < shipSize; k++) {
+                            grille[line][column - k] = shipName.substring(0, 1).toUpperCase();
+                        }
+                        isSet = true;
                     }
-                    isSet = true;
+                }
+                default -> {
                 }
             }
 
@@ -219,63 +211,68 @@ public class NavalBattle {
     }
 
     // Tir du joueur
-    public static boolean shoot(String input) {
-        input = input.toUpperCase().trim();
+    public static int shoot(String input) {
+    input = input.toUpperCase().trim();
 
-        // Vérifie que l'input a au moins 2 caractères
-        if (input.length() < 2) {
-            System.out.println("Invalid input! Format: A1, B5, etc.");
-            return false;
-        }
+    // Vérifie que l'input a au moins 2 caractères
+    if (input.length() < 2) {
+        System.out.println("Invalid input! Format: A1, B5, etc.");
+        return 0;
+    }
 
-        char colChar = input.charAt(0);
-        if (colChar < 'A' || colChar > 'J') { // Colonne valide
-            System.out.println("Column out of range! Use A-J.");
-            return false;
-        }
-        int column = colChar - 'A';
+    // Colonne
+    char colChar = input.charAt(0);
+    if (colChar < 'A' || colChar > 'J') {
+        System.out.println("Column out of range! Use A-J.");
+        return 0;
+    }
+    int column = colChar - 'A';
 
-        String rowPart = input.substring(1);
-        if (!rowPart.matches("\\d+")) { // Vérifie que c'est bien un nombre
-            System.out.println("Row must be a number between 1 and 10!");
-            return false;
-        }
+    // Ligne
+    String rowPart = input.substring(1);
+    if (!rowPart.matches("\\d+")) {
+        System.out.println("Row must be a number between 1 and 10!");
+        return 0;
+    }
+    int line = Integer.parseInt(rowPart) - 1;
+    if (line < 0 || line >= 10) {
+        System.out.println("Row out of range! Use 1-10.");
+        return 0;
+    }
 
-        int line = Integer.parseInt(rowPart) - 1;
-        if (line < 0 || line >= 10) {
-            System.out.println("Row out of range! Use 1-10.");
-            return false;
-        }
+    // Cellule
+    String cell = grille[line][column];
 
-        // Le reste reste pareil
-        String cell = grille[line][column];
+    // Case déjà tirée
+    if (cell.equals("X") || cell.equals("O") || cell.equals("#")) {
+        System.out.println("Already shot here!");
+        return 0;
+    }
 
-        if (cell.equals("-")) {
-            grille[line][column] = "O";
-            System.out.println("Miss!");
-            return false;
-        } else if (cell.equals("X") || cell.equals("O") || cell.equals("#")) {
-            System.out.println("Already shot here!");
-            return false;
-        } else {
-            grille[line][column] = "X";
-            System.out.println("Hit!");
+    // Tir sur eau
+    if (cell.equals("-")) {
+        grille[line][column] = "O";
+        System.out.println("Miss!");
+        return 1;
+    }
 
-            for (int i = 0; i < shipNames.length; i++) {
-                if (shipNames[i].equals(cell)) {
-                    shipSizes[i]--;
-                    if (shipSizes[i] == 0) {
-                        System.out.println("Ship " + cell + " is sunk!");
-                        markSunk(cell);
-                    }
-                    break;
-                }
+    // Tir sur bateau
+    grille[line][column] = "X";
+    System.out.println("Hit!");
+    for (int i = 0; i < shipNames.length; i++) {
+        if (shipNames[i].equals(cell)) {
+            shipSizes[i]--;
+            if (shipSizes[i] == 0) {
+                System.out.println("Ship " + cell + " is sunk!");
+                markSunk(cell);
             }
-            return true;
+            break;
         }
     }
 
-    // Marquer un navire coulé
+    return 2; // Tir touché
+}
+        // Marquer un navire coulé
     public static void markSunk(String shipLetter) {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
