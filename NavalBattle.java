@@ -9,7 +9,7 @@ public class NavalBattle {
     public static final String RED = "\u001B[31m";
     public static final String BLUE = "\u001B[96m";
     public static final String GREEN = "\u001B[32m";
-    public static final String BLACK = "\u001B[30m";
+    public static final String PURPLE = "\u001B[35m";
     public static final String RESET = "\u001B[0m";
 
     public static void main(String[] args) {
@@ -69,7 +69,7 @@ public class NavalBattle {
         BLUE + "- " + RESET + ": Case non tirée",
         GREEN + "O " + RESET + ": Tir manqué",
         RED + "X " + RESET + ": Touché",
-        BLACK + "# " + RESET + ": Navire coulé"
+        PURPLE + "# " + RESET + ": Navire coulé"
     };
        // Affichage des colonnes
     System.out.print("   ");
@@ -94,7 +94,7 @@ public class NavalBattle {
                     color = RED;
                     break;
                 case "#":
-                    color = BLACK;
+                    color = PURPLE;
                     break;
                 default:
                     color = BLUE;
