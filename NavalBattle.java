@@ -36,10 +36,14 @@ public class NavalBattle {
                 String input = xy.nextLine().toUpperCase();
 
                 // Tir et mise à jour du compteur
-                if (shoot(input))
+                boolean validShot = shoot(input);
+                if (validShot) {
                     remainingShipCells--;
+                    shots++;
+                } else {
+                    System.out.println("Try again, input invalid or cell already shot.");
+                }
 
-                shots++;
                 // Affiche la grille après chaque tir
                 displayGrille();
             }
@@ -65,57 +69,57 @@ public class NavalBattle {
 
     // Affichage de la grille
     public static void displayGrille() {
-         String[] legend = {
-        BLUE + "- " + RESET + ": Case non tirée",
-        GREEN + "O " + RESET + ": Tir manqué",
-        RED + "X " + RESET + ": Touché",
-        PURPLE + "# " + RESET + ": Navire coulé"
-    };
-       // Affichage des colonnes
-    System.out.print("   ");
-    for (int i = 0; i < 10; i++) {
-        System.out.print((char) ('A' + i) + "  "); // 2 espaces pour aligner
-    }
-    System.out.println();
-
-    for (int i = 0; i < 10; i++) {
-        // Numéro de ligne
-        System.out.print((i < 9 ? " " : "") + (i + 1) + " ");
-
-        for (int j = 0; j < 10; j++) {
-            String cell = grille[i][j];
-            String color;
-
-            switch (cell) {
-                case "O":
-                    color = GREEN;
-                    break;
-                case "X":
-                    color = RED;
-                    break;
-                case "#":
-                    color = PURPLE;
-                    break;
-                default:
-                    color = BLUE;
-            }
-
-            // Bateau non touché = eau "-"
-            if (cell.equals("A") || cell.equals("C") || cell.equals("D") || cell.equals("S") || cell.equals("T")) {
-                System.out.print(BLUE + "-" + RESET + "  ");
-            } else {
-                System.out.print(color + cell + RESET + "  ");
-            }
+        String[] legend = {
+                BLUE + "- " + RESET + ": Case non tirée",
+                GREEN + "O " + RESET + ": Tir manqué",
+                RED + "X " + RESET + ": Touché",
+                PURPLE + "# " + RESET + ": Navire coulé"
+        };
+        // Affichage des colonnes
+        System.out.print("   ");
+        for (int i = 0; i < 10; i++) {
+            System.out.print((char) ('A' + i) + "  "); // 2 espaces pour aligner
         }
-
-        // Affiche la légende sur certaines lignes (centrée verticalement)
-        if (i >= 3 && i <= 6) {
-            System.out.print("       " + legend[i - 3]);
-        }
-
         System.out.println();
+
+        for (int i = 0; i < 10; i++) {
+            // Numéro de ligne
+            System.out.print((i < 9 ? " " : "") + (i + 1) + " ");
+
+            for (int j = 0; j < 10; j++) {
+                String cell = grille[i][j];
+                String color;
+
+                switch (cell) {
+                    case "O":
+                        color = GREEN;
+                        break;
+                    case "X":
+                        color = RED;
+                        break;
+                    case "#":
+                        color = PURPLE;
+                        break;
+                    default:
+                        color = BLUE;
+                }
+
+                // Bateau non touché = eau "-"
+                if (cell.equals("A") || cell.equals("C") || cell.equals("D") || cell.equals("S") || cell.equals("T")) {
+                    System.out.print(BLUE + "-" + RESET + "  ");
+                } else {
+                    System.out.print(color + cell + RESET + "  ");
+                }
+            }
+
+            // Affiche la légende sur certaines lignes (centrée verticalement)
+            if (i >= 3 && i <= 6) {
+                System.out.print("       " + legend[i - 3]);
+            }
+
+            System.out.println();
+        }
     }
-}
 
     // Placement aléatoire des bateaux
     public static void setShip(int shipSize, String shipName) { // Placement aléatoire des bateaux
@@ -216,49 +220,53 @@ public class NavalBattle {
 
     // Tir du joueur
     public static boolean shoot(String input) {
-        // Vérifier que la saisie a au moins 2 caractères
+        input = input.toUpperCase().trim();
+
+        // Vérifie que l'input a au moins 2 caractères
         if (input.length() < 2) {
-            System.out.println("Invalid input!");
-            return false;
-        }
-        // Conversion A5 -> ligne/colonne
-        int column = input.charAt(0) - 'A';
-        int line = Integer.parseInt(input.substring(1)) - 1;
-
-        try {
-            line = Integer.parseInt(input.substring(1)) - 1;
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number!");
+            System.out.println("Invalid input! Format: A1, B5, etc.");
             return false;
         }
 
-        // Vérifier que la ligne et la colonne sont dans les limites
-        if (line < 0 || line >= 10 || column < 0 || column >= 10) {
-            System.out.println("Coordinates out of the map !");
+        char colChar = input.charAt(0);
+        if (colChar < 'A' || colChar > 'J') { // Colonne valide
+            System.out.println("Column out of range! Use A-J.");
+            return false;
+        }
+        int column = colChar - 'A';
+
+        String rowPart = input.substring(1);
+        if (!rowPart.matches("\\d+")) { // Vérifie que c'est bien un nombre
+            System.out.println("Row must be a number between 1 and 10!");
             return false;
         }
 
+        int line = Integer.parseInt(rowPart) - 1;
+        if (line < 0 || line >= 10) {
+            System.out.println("Row out of range! Use 1-10.");
+            return false;
+        }
+
+        // Le reste reste pareil
         String cell = grille[line][column];
 
         if (cell.equals("-")) {
-            grille[line][column] = "O"; // Tir manqué
+            grille[line][column] = "O";
             System.out.println("Miss!");
             return false;
         } else if (cell.equals("X") || cell.equals("O") || cell.equals("#")) {
             System.out.println("Already shot here!");
             return false;
         } else {
-            // Touché
             grille[line][column] = "X";
             System.out.println("Hit!");
 
-            // Trouver quel bateau a été touché
             for (int i = 0; i < shipNames.length; i++) {
                 if (shipNames[i].equals(cell)) {
-                    shipSizes[i]--; // réduit la taille restante
+                    shipSizes[i]--;
                     if (shipSizes[i] == 0) {
                         System.out.println("Ship " + cell + " is sunk!");
-                        markSunk(cell); // marquer toutes les cases du bateau en #
+                        markSunk(cell);
                     }
                     break;
                 }
